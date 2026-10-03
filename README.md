@@ -129,6 +129,16 @@ docker compose up -d app
 
 如果配置了固定的 `INCUDAL_IMAGE`，先将其改为目标版本或 `ghcr.io/shane654/incudal:latest`。容器启动时会自动执行数据库迁移。
 
+Linux/systemd 部署可启用自动更新：
+
+```bash
+sudo bash scripts/install-auto-update.sh "$(pwd)"
+```
+
+定时器每 120 秒检查已发布镜像，只重建 `app`，沿用数据库、Redis 和数据卷。应用健康检查失败时会恢复旧镜像，并跳过同一失败镜像，直到有新的镜像发布。保留上一个镜像供回退；数据库迁移不会随镜像回退撤销。日志可用 `journalctl -u incudal-auto-update.service` 查看，暂停可用 `sudo systemctl disable --now incudal-auto-update.timer`。Compose 中的 Watchtower 排除标签避免全局更新器与此定时器同时操作面板。
+
+`main` 推送只运行 CI，不发布镜像；正式镜像仍由 `v*` 标签或手动 Release 工作流发布。CI 和发布按架构共用构建缓存，amd64 与 arm64 使用原生 runner 并行构建。自动更新仅在发布后的 `latest` 发生变化时执行。
+
 Docker 源码部署先更新本地源码，再执行上述带构建覆盖文件的 `up -d --build` 命令。
 
 直接运行源码的部署更新代码后执行：
