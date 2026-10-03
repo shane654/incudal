@@ -1,8 +1,6 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ${INCUDAL_IMAGE:-ghcr.io/shane654/incudal:latest}
     ports:
       - "127.0.0.1:${APP_PORT:-3000}:3000"
     environment:

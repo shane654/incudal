@@ -85,8 +85,11 @@ git clone https://github.com/shane654/incudal.git
 cd incudal
 cp .env.example .env
 bash scripts/init-env.sh
-docker compose up -d --build
+docker compose pull
+docker compose up -d
 ```
+
+默认使用 `ghcr.io/shane654/incudal:latest`，对应最新发布版本，支持 Linux amd64 和 arm64。可在 `.env` 中通过 `INCUDAL_IMAGE` 指定版本标签（例如 `ghcr.io/shane654/incudal:1.0.0`）或镜像 digest。
 
 默认仅监听 `127.0.0.1:3000`，生产环境应通过受信任反向代理提供 HTTPS。启动前至少确认 `POSTGRES_PASSWORD`、`JWT_SECRET`、`ENCRYPTION_KEY`、`ADMIN_PASSWORD`、`FRONTEND_URL` 和 `SITE_URL` 已正确配置。不要提交生产环境 `.env`。
 
@@ -105,7 +108,28 @@ pnpm dev
 
 构建全部项目：`pnpm build`。
 
+如需用 Docker 运行本地修改的源码，在完成 `.env` 配置后使用构建覆盖文件：
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+```
+
+该配置会构建 `incudal:local`。后续管理这套部署时，继续使用相同的两个 `-f` 参数。
+
 ## 升级现有部署
+
+Docker 镜像部署拉取并应用最新发布版：
+
+```bash
+docker compose pull app
+docker compose up -d app
+```
+
+如果配置了固定的 `INCUDAL_IMAGE`，先将其改为目标版本或 `ghcr.io/shane654/incudal:latest`。容器启动时会自动执行数据库迁移。
+
+Docker 源码部署先更新本地源码，再执行上述带构建覆盖文件的 `up -d --build` 命令。
+
+直接运行源码的部署更新代码后执行：
 
 ```bash
 pnpm install

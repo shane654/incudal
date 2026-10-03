@@ -1,0 +1,8 @@
+# Use with docker-compose.yml to build the panel from local source.
+services:
+  app:
+    image: incudal:local
+    pull_policy: build
+    build:
+      context: .
+      dockerfile: Dockerfile
