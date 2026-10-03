@@ -88,6 +88,10 @@ RUN chmod +x ./server/docker-entrypoint.sh
 # 创建证书目录
 RUN mkdir -p server/certs && chown -R incudal:nodejs server/certs
 
+# Release builds supply the exact tag; local source builds keep package fallback.
+ARG INCUDAL_VERSION=""
+RUN printf '%s\n' "$INCUDAL_VERSION" > VERSION
+
 EXPOSE 3000
 
 ENTRYPOINT ["./server/docker-entrypoint.sh"]

@@ -28,7 +28,7 @@
     "test:external-url": "tsx scripts/test-external-url.ts",
     "test:api": "tsx scripts/test-api.ts",
     "analyze:queries": "tsx scripts/analyze-queries.ts",
-    "test:fork-security": "tsx scripts/test-agent-upgrade-policy.ts && tsx scripts/test-admin-registration-email.ts && tsx scripts/test-seo-site-url.ts && tsx scripts/test-system-update-security.ts && tsx scripts/test-client-ip.ts"
+    "test:fork-security": "tsx scripts/test-agent-upgrade-policy.ts && tsx scripts/test-admin-registration-email.ts && tsx scripts/test-seo-site-url.ts && tsx scripts/test-system-update-security.ts && tsx scripts/test-client-ip.ts && tsx scripts/test-system-version.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",

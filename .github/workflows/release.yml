@@ -160,6 +160,10 @@ jobs:
           cp scripts/install-docker.sh scripts/install-panel.sh scripts/remote-update.sh release/scripts/
           cp package.json release/
           printf '%s\n' "$RELEASE_VERSION" > release/VERSION
+          (cd release/server && EXPECTED_VERSION="$RELEASE_VERSION" node --input-type=module -e '
+            import { getCurrentVersion } from "./dist/lib/system-version.js";
+            if (getCurrentVersion() !== process.env.EXPECTED_VERSION) throw new Error("release version mismatch");
+          ')
           test -x release/server/node_modules/.bin/prisma
           test -f release/scripts/remote-update.sh
       - name: Verify runtime CLI and generate client
@@ -277,6 +281,8 @@ jobs:
           platforms: ${{ matrix.platform }}
           outputs: type=image,name=ghcr.io/${{ github.repository }},push-by-digest=true,name-canonical=true,push=true
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            INCUDAL_VERSION=${{ needs.prepare.outputs.version }}
           cache-from: type=gha,scope=incudal-${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=incudal-${{ matrix.arch }}
       - name: Export image digest

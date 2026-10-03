@@ -7,10 +7,10 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { spawn, type ChildProcess } from 'child_process'
 import { randomUUID } from 'crypto'
-import { existsSync, readFileSync } from 'fs'
-import { join } from 'path'
+import { existsSync } from 'fs'
 import { createLog } from '../db/logs.js'
 import { logAdminAction } from '../lib/security.js'
+import { getCurrentVersion } from '../lib/system-version.js'
 import {
   DEFAULT_GITHUB_REPOSITORY,
   buildManualCommand,
@@ -69,22 +69,6 @@ let lastUpdate: UpdateExecution | null = null
 
 function getDefaultRepository(): string {
   return getAllowedRepositories()[0] || DEFAULT_GITHUB_REPOSITORY
-}
-
-function getCurrentVersion(): string {
-  const configured = process.env.INCUDAL_VERSION?.trim()
-  if (configured) return configured.startsWith('v') ? configured : `v${configured}`
-
-  try {
-    const packagePath = join(process.cwd(), 'package.json')
-    const packageJson = JSON.parse(readFileSync(packagePath, 'utf8')) as { version?: unknown }
-    if (typeof packageJson.version === 'string' && packageJson.version.trim()) {
-      return packageJson.version.trim().startsWith('v') ? packageJson.version.trim() : `v${packageJson.version.trim()}`
-    }
-  } catch {
-    // 发行包或容器中无法读取 package.json 时返回 unknown，由页面显示人工确认。
-  }
-  return 'unknown'
 }
 
 function normalizeReleaseVersion(value: unknown): string | null {
