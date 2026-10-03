@@ -4,6 +4,7 @@
 
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import * as db from '../db/index.js'
+import { resolveSeoSiteUrl } from '../lib/seo-site-url.js'
 import { createLog } from '../db/logs.js'
 import { apiError, ErrorCode } from '../lib/errors.js'
 import { isSmtpEnabled, testSmtpConnection, sendTestEmail, clearTransporterCache } from '../lib/mailer.js'
@@ -234,7 +235,7 @@ export default async function systemConfigRoutes(fastify: FastifyInstance) {
             brandName: brandName || 'Incudal',
             brandSubtitle: brandSubtitle || '基于 Incus 的低价 NAT VPS',
             brandLogoUrl: brandLogoUrl || '/incudal_logo.webp',
-            seoSiteUrl: seoSiteUrl || 'https://incudal.di0.uk',
+            seoSiteUrl: resolveSeoSiteUrl(seoSiteUrl),
             seoSitemapPath: seoSitemapPath || '/sitemap.xml',
             seoVerificationPath: seoVerificationPath || null,
             seoIndexNowEndpoint: seoIndexNowEndpoint || 'https://api.indexnow.org/IndexNow',
@@ -256,7 +257,7 @@ export default async function systemConfigRoutes(fastify: FastifyInstance) {
     fastify.post('/seo/indexnow/submit', {
         onRequest: [fastify.authenticateAdmin]
     }, async (_request: FastifyRequest, reply: FastifyReply) => {
-        const configuredSiteUrl = (await db.getSystemConfig('seo_site_url'))?.trim() || 'https://incudal.di0.uk'
+        const configuredSiteUrl = resolveSeoSiteUrl(await db.getSystemConfig('seo_site_url'))
         const sitemapPath = (await db.getSystemConfig('seo_sitemap_path'))?.trim() || '/sitemap.xml'
         const endpoint = (await db.getSystemConfig('seo_indexnow_endpoint'))?.trim() || 'https://api.indexnow.org/IndexNow'
         const key = (await db.getSystemConfig('seo_indexnow_key'))?.trim() || ''

@@ -14,14 +14,13 @@
 #   升级：  sudo bash install-panel.sh --upgrade
 #   卸载：  sudo bash install-panel.sh --uninstall
 #
-# 项目地址: https://github.com/1743986520/incudal
+# 项目地址: https://github.com/shane654/incudal
 # ============================================================================
 set -euo pipefail
 
 # ========================== 全局常量 ==========================
 readonly SCRIPT_VERSION="3.0.0"
-readonly DEFAULT_GITHUB_REPO="1743986520/incudal"
-readonly DEFAULT_UPDATE_REF="deeb7d65b1d2a1df461373d48090d77b2b2e4741"
+readonly DEFAULT_GITHUB_REPO="shane654/incudal"
 readonly GITHUB_REPO="${INCUDAL_GITHUB_REPO:-${INCUDAL_UPDATE_SOURCE:-$DEFAULT_GITHUB_REPO}}"
 readonly INSTALL_DIR="${INCUDAL_INSTALL_DIR:-/opt/incudal}"
 readonly SERVICE_NAME="incudal"
@@ -929,6 +928,8 @@ APP_PORT=${DEFAULT_PORT}
 ADMIN_PASSWORD=${admin_password}
 LOG_LEVEL=info
 DISABLE_REQUEST_LOG=true
+INCUDAL_ADMIN_REGISTRATION_ENABLED=false
+INCUDAL_AGENT_AUTO_UPDATE=false
 
 # ============ CORS 配置（必须修改为实际域名！）============
 # 支付回调地址也会使用这个域名，必须是公网可访问的地址
@@ -1223,7 +1224,7 @@ show_result() {
     echo -e "  重启服务  :  ${CYAN}systemctl restart ${SERVICE_NAME}${NC}"
     echo -e "  查看状态  :  ${CYAN}systemctl status ${SERVICE_NAME}${NC}"
     echo -e "  查看日志  :  ${CYAN}journalctl -u ${SERVICE_NAME} -f${NC}"
-    echo -e "  远程更新  :  ${CYAN}curl -fsSL https://raw.githubusercontent.com/${GITHUB_REPO}/${DEFAULT_UPDATE_REF}/scripts/remote-update.sh | sudo bash -s -- --ref ${DEFAULT_UPDATE_REF}${NC}"
+    info "远程更新请在管理后台配置已审查的 commit SHA 和脚本 SHA256 后执行"
     echo ""
     divider
 }

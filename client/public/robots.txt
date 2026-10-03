@@ -12,5 +12,3 @@ Disallow: /api/
 Disallow: /login
 Disallow: /register
 Disallow: /forgot-password
-
-Sitemap: https://incudal.di0.uk/sitemap.xml

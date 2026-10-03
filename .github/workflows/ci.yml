@@ -35,6 +35,11 @@ jobs:
         env:
           DATABASE_URL: postgresql://user:pass@localhost:5432/db
 
+      - name: Security regression checks
+        run: |
+          pnpm --filter server test:fork-security
+          node --test scripts/test-installer-regressions.mjs
+
       - name: Lint
         run: pnpm lint
 
@@ -47,7 +52,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22.x'
+          go-version: '1.27.1'
           cache-dependency-path: agent/go.mod
 
       - name: Test Agent
@@ -75,6 +80,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts
 
+      - name: Rebuild native build tools
+        run: pnpm rebuild esbuild
+
       - name: Generate Prisma Client
         run: pnpm --filter server exec prisma generate
         env:
@@ -82,3 +90,39 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  docker-build:
+    name: Build panel and bundled Agent
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  config-migration:
+    name: Preserve custom settings during migration
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: test-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check legacy cleanup and custom configuration preservation
+        env:
+          PGPASSWORD: test-password
+        run: psql -h localhost -U postgres -d postgres -f server/scripts/test-site-config-migration.sql

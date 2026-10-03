@@ -112,9 +112,11 @@ assets:
   incudal-agent-aarch64-v0.0.1
 ```
 
-面板运行时不会读取本地 `agent/dist`。它会从 GitHub Release 查询最新 Agent 版本，动态生成 `/api/agent/manifest.json`，并通过 `/api/agent/binary/*` 代理下载对应 Release 资产。
+面板优先读取本地 `agent/dist`（或 `INCUDAL_AGENT_LOCAL_DIST` 指定的目录）中的 manifest 和二进制，并核对 SHA256。Dockerfile 会从同一份源码构建并捆绑这些产物。只有本地产物缺失时才查询 GitHub Release，动态生成 `/api/agent/manifest.json` 并代理下载资产。
 
-默认 GitHub Release 仓库为 `1743986520/incudal`。如果部署到 fork 或私有仓库，可设置仓库地址或 `owner/repo`：
+默认不会因版本不同自动升级 Agent。由节点所有者或管理员在面板发起升级；如需自动更新，必须在面板服务端设置 `INCUDAL_AGENT_AUTO_UPDATE=true` 并重启服务。
+
+默认 GitHub Release 仓库为 `shane654/incudal`。如果部署到 fork 或私有仓库，可设置仓库地址或 `owner/repo`：
 
 ```bash
 INCUDAL_AGENT_RELEASE_URL="https://github.com/owner/repo"

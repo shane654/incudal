@@ -3990,6 +3990,8 @@ export default async function hostRoutes(fastify: FastifyInstance) {
       return reply.code(403).send(apiError(ErrorCode.FORBIDDEN))
     }
 
+    const panelUrl = derivePanelUrl(request)
+
     // 如果已有凭据，复用现有的；否则生成新的
     let username = host.caddy_username
     let password = host.caddy_password
@@ -4023,9 +4025,6 @@ export default async function hostRoutes(fastify: FastifyInstance) {
 
     // 构建安装命令
     // 使用FRONTEND_URL，如果包含多个URL（逗号分隔），使用第一个
-    const panelUrl = process.env.FRONTEND_URL
-      ? process.env.FRONTEND_URL.split(',')[0].trim()
-      : 'https://incudal.com'
     // 生成带鉴权 token 的脚本下载 URL
     const scriptToken = generateCaddyScriptToken(hostId)
     const installCommand = `curl -sSL "${panelUrl}/api/hosts/caddy-script/${scriptToken}" | sudo bash -s -- --username "${username}" --password "${password}" --port ${port}`
@@ -4066,6 +4065,8 @@ export default async function hostRoutes(fastify: FastifyInstance) {
       return reply.code(403).send(apiError(ErrorCode.FORBIDDEN))
     }
 
+    const panelUrl = derivePanelUrl(request)
+
     // 强制生成新凭据
     const username = 'caddy_' + generateRandomString(8)
     const password = generateRandomString(24)
@@ -4083,9 +4084,6 @@ export default async function hostRoutes(fastify: FastifyInstance) {
     })
 
     // 使用FRONTEND_URL，如果包含多个URL（逗号分隔），使用第一个
-    const panelUrl = process.env.FRONTEND_URL
-      ? process.env.FRONTEND_URL.split(',')[0].trim()
-      : 'https://incudal.com'
     // 生成带鉴权 token 的脚本下载 URL
     const scriptToken = generateCaddyScriptToken(hostId)
     const installCommand = `curl -sSL "${panelUrl}/api/hosts/caddy-script/${scriptToken}" | sudo bash -s -- --username "${username}" --password "${password}" --port ${port}`

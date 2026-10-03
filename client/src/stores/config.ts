@@ -27,7 +27,7 @@ export const useConfigStore = defineStore('config', () => {
     const brandName = ref('Incudal')
     const brandSubtitle = ref('基于 Incus 的低价 NAT VPS')
     const brandLogoUrl = ref('/incudal_logo.webp')
-    const seoSiteUrl = ref('https://incudal.di0.uk')
+    const seoSiteUrl = ref('')
     const registrationEnabled = ref(true)
     const requireInviteCode = ref(true)
     const ticketEnabled = ref(true)
@@ -38,8 +38,8 @@ export const useConfigStore = defineStore('config', () => {
     const transferFee = ref(0)
     const balanceTransferEnabled = ref(false)
     const balanceTransferFee = ref(0)
-    const footerContactEmail = ref<string | null>('incudal@sent.com')
-    const footerTelegramLink = ref<string | null>('https://t.me/incudal_com')
+    const footerContactEmail = ref<string | null>(null)
+    const footerTelegramLink = ref<string | null>(null)
     const hostingMarketEntryEnabled = ref(true)
     const hostingNotice = ref<string | null>(null)
     const seoTrackingEnabled = ref(false)
@@ -73,7 +73,7 @@ export const useConfigStore = defineStore('config', () => {
                 brandName.value = config.brandName?.trim() || 'Incudal'
                 brandSubtitle.value = config.brandSubtitle?.trim() || '基于 Incus 的低价 NAT VPS'
                 brandLogoUrl.value = config.brandLogoUrl?.trim() || '/incudal_logo.webp'
-                seoSiteUrl.value = config.seoSiteUrl?.trim() || 'https://incudal.di0.uk'
+                seoSiteUrl.value = config.seoSiteUrl?.trim() || ''
                 transferFee.value = config.transferFee || 0
                 balanceTransferEnabled.value = config.balanceTransferEnabled ?? false
                 balanceTransferFee.value = config.balanceTransferFee || 0

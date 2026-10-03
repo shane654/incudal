@@ -2,8 +2,9 @@ export function resolveRegistrationRole(input: {
   email: string | null
   adminRegistrationEmails: string | null
   emailVerified: boolean
+  allowAdminRegistration?: boolean
 }): 'admin' | 'user' {
-  if (!input.email || !input.emailVerified || !input.adminRegistrationEmails) {
+  if (!input.allowAdminRegistration || !input.email || !input.emailVerified || !input.adminRegistrationEmails) {
     return 'user'
   }
 

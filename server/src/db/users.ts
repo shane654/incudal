@@ -395,7 +395,8 @@ export async function createRegisteredUser(
   const role = resolveRegistrationRole({
     email: input.email,
     adminRegistrationEmails,
-    emailVerified: input.emailVerified === true
+    emailVerified: input.emailVerified === true,
+    allowAdminRegistration: process.env.INCUDAL_ADMIN_REGISTRATION_ENABLED === 'true'
   })
   const avatarStyle = AVATAR_STYLES[Math.floor(Math.random() * AVATAR_STYLES.length)]
 

@@ -81,7 +81,7 @@ Incudal 是一个基于 Incus 的容器与 KVM 虚拟机管理、销售和托管
 ## 快速部署
 
 ```bash
-git clone https://github.com/1743986520/incudal.git
+git clone https://github.com/shane654/incudal.git
 cd incudal
 cp .env.example .env
 bash scripts/init-env.sh
@@ -120,19 +120,28 @@ pnpm build
 
 ### 远程更新
 
-已部署的面板可以直接从 GitHub 仓库下载最新更新脚本并执行升级。默认来源为本仓库，也可以通过 `--source` 指定其他 GitHub 仓库：
+远程更新默认来源为 `shane654/incudal`，必须指定已经审查的完整 Git commit SHA。先获取源码、审查对应提交，再从本地执行脚本：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/1743986520/incudal/main/scripts/remote-update.sh | sudo bash
-
-# 从指定仓库更新
-curl -fsSL https://raw.githubusercontent.com/1743986520/incudal/main/scripts/remote-update.sh \
-  | sudo bash -s -- --source https://github.com/owner/repo
+# 在已经审查并切换到目标提交的本仓库目录中执行
+sudo bash scripts/remote-update.sh --source shane654/incudal --ref "$(git rev-parse HEAD)"
 ```
+
+管理后台更新还要求在服务端配置 `INCUDAL_UPDATE_REF` 和 `INCUDAL_UPDATE_SCRIPT_SHA256`。未配置时不会执行远程更新。不要从 `main` 或其他可变分支直接下载脚本后以 root 执行。
 
 脚本会自动识别 Docker Compose 与 systemd 产物包部署，并在升级前保留现有 `.env`、证书和数据库数据。
 
 管理员也可以登录站点，在「管理 → 系统更新」中手动检查版本、选择更新来源和部署模式，再点击「立即更新」。更新需要明确确认，不会在后台静默执行；如果当前部署没有站点更新执行器，页面会提供可复制的 root 命令。
+
+## 本 fork 的安全默认值
+
+- Docker 构建会从同一份源码生成 Linux amd64/arm64 Agent，并随面板镜像提供；无需查询第三方 Agent Release。非 Docker 部署可先运行 `bash agent/scripts/build-release.sh`，将整个 `agent/dist` 放到面板根目录的 `agent/dist`，或通过 `INCUDAL_AGENT_LOCAL_DIST` 指定目录。
+- `INCUDAL_AGENT_AUTO_UPDATE=false`：版本差异不会自动更新 root Agent；节点所有者或管理员仍可在面板发起手动升级。只有明确设为 `true` 才恢复自动更新。本地产物缺失时，默认 Release 来源是 `shane654/incudal`，需要自行发布 Agent 或配置可信来源。
+- `INCUDAL_ADMIN_REGISTRATION_ENABLED=false`：注册默认只创建普通用户。启用自动管理员需要部署人员显式开启该开关、启用 SMTP 邮箱验证，并配置受控邮箱域名。管理员仍可通过现有用户管理手动授权。
+- 搜索引擎验证文件、IndexNow Key、GA ID、原站点域名和联系方式不再预置。SEO 地址依次读取后台配置、`SITE_URL`、`FRONTEND_URL`；都未设置时不发布 Sitemap。升级迁移仅清理已知上游默认值，保留自定义配置。
+- 生产环境 Agent 和节点安装命令必须来自配置的面板地址，缺少配置时不会回退到第三方站点。
+
+这些是安全加固措施，不代表对全部依赖或第三方预编译产物完成了安全认证。可选 RFW 仍使用独立的 `0xdabiaoge/incudal-rfw` 发布源。
 
 ## 项目结构
 

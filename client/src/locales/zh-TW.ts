@@ -4606,7 +4606,7 @@ export default {
             inviteOnly: '僅邀請',
             adminRegistrationEmails: '註冊後自動成為管理員的信箱後綴',
             adminRegistrationEmailsPlaceholder: "例如：{'@'}abc.com\n{'@'}example.org",
-            adminRegistrationEmailsDesc: '填寫信箱後綴，多個後綴可用逗號、分號或換行分隔。使用符合後綴且完成信箱驗證的使用者，註冊後會自動成為管理員。',
+            adminRegistrationEmailsDesc: '預設關閉，需部署管理員在伺服器端明確開啟後才生效。多個信箱後綴可用逗號、分號或換行分隔；符合後綴且完成信箱驗證的新使用者才可自動成為管理員。',
             affRebate: {
                 title: 'AFF 返利',
                 description: '控制使用者是否可以建立、使用 AFF 優惠碼並獲得返利收益。',
@@ -4673,7 +4673,7 @@ export default {
                 trackingEnabledHint: '開啟後，所有前台頁面會載入設定的追蹤腳本。',
                 trackingScriptUrl: '追蹤腳本位址',
                 trackingId: '追蹤 ID',
-                trackingIdHint: '例如 Google Analytics 4 的 G-1HXQL8QTW2；留空時不會載入腳本。',
+                trackingIdHint: '例如 Google Analytics 4 的 G-XXXXXXXXXX；留空時不會載入腳本。',
             },
             ticket: {
                 title: '工單設定',

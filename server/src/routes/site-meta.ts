@@ -8,8 +8,8 @@
 
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { getHelpArticles, getSystemConfig } from '../db/index.js'
+import { resolveSeoSiteUrl } from '../lib/seo-site-url.js'
 
-const DEFAULT_SITE_URL = 'https://incudal.di0.uk'
 const DEFAULT_SITEMAP_PATH = '/sitemap.xml'
 const BUILT_IN_HELP_SLUGS = [
   'platform-overview',
@@ -32,20 +32,6 @@ interface SeoRuntimeSettings {
 }
 
 let runtimeSettingsCache: { value: SeoRuntimeSettings; expiresAt: number } | null = null
-
-function normalizeSiteUrl(value: string | null): string {
-  if (!value) return DEFAULT_SITE_URL
-
-  try {
-    const url = new URL(value.trim())
-    if (!['http:', 'https:'].includes(url.protocol)) return DEFAULT_SITE_URL
-    url.hash = ''
-    url.search = ''
-    return url.toString().replace(/\/+$/, '')
-  } catch {
-    return DEFAULT_SITE_URL
-  }
-}
 
 function normalizePath(value: string | null, fallback: string, allowEmpty = false): string {
   const path = (value || '').trim()
@@ -83,7 +69,7 @@ async function getSeoRuntimeSettings(): Promise<SeoRuntimeSettings> {
   ])
 
   const value = {
-    siteUrl: normalizeSiteUrl(siteUrl),
+    siteUrl: resolveSeoSiteUrl(siteUrl),
     sitemapPath: normalizePath(sitemapPath, DEFAULT_SITEMAP_PATH),
     verificationPath: normalizePath(verificationPath, '', true),
     verificationContent: verificationContent || '',
@@ -165,6 +151,10 @@ async function buildSitemapBody(siteUrl: string): Promise<string> {
 }
 
 async function sendSitemap(reply: FastifyReply, settings: SeoRuntimeSettings): Promise<void> {
+  if (!settings.siteUrl) {
+    reply.code(503).header('Cache-Control', 'no-store').send({ error: 'Configure SITE_URL or seo_site_url before publishing a sitemap' })
+    return
+  }
   reply
     .type('application/xml; charset=utf-8')
     .header('Cache-Control', 'public, max-age=900')
@@ -224,7 +214,7 @@ export default async function siteMetaRoutes(fastify: FastifyInstance): Promise<
       'Disallow: /register',
       'Disallow: /forgot-password',
       '',
-      `Sitemap: ${new URL(settings.sitemapPath, `${settings.siteUrl}/`).toString()}`,
+      ...(settings.siteUrl ? [`Sitemap: ${new URL(settings.sitemapPath, `${settings.siteUrl}/`).toString()}`] : []),
       ''
     ].join('\n')
 

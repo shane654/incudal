@@ -13,6 +13,7 @@ import { fileURLToPath } from 'url'
 import { prisma } from '../db/prisma.js'
 import { createLog, LogModule, LogResult } from '../db/logs.js'
 import { decryptSensitiveData } from '../lib/security.js'
+import { shouldOfferAgentUpgrade } from '../lib/agent-upgrade-policy.js'
 import {
   agentNonceTtlMs,
   createAgentBodyHash,
@@ -202,7 +203,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const agentBinaryNamePattern = /^incudal-agent-linux-(amd64|arm64)(?:\.gz)?$/
 const agentReleaseBinaryNamePattern = /^incudal-agent-(x86_64|aarch64)-v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/
-const defaultAgentReleaseRepository = '1743986520/incudal'
+const defaultAgentReleaseRepository = 'shane654/incudal'
 const githubApiBaseUrl = 'https://api.github.com'
 const githubDownloadBaseUrl = 'https://github.com'
 const agentReleaseCacheTtlMs = 5 * 60 * 1000
@@ -440,7 +441,7 @@ function normalizeBaseUrl(value: string | null | undefined): string | null {
 
   try {
     const parsed = new URL(trimmed)
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    if ((parsed.protocol !== 'http:' && parsed.protocol !== 'https:') || parsed.username || parsed.password) {
       return null
     }
     return `${parsed.protocol}//${parsed.host}`
@@ -460,6 +461,10 @@ function derivePanelUrl(request: FastifyRequest, explicitBaseUrl?: string): stri
     return frontendUrl
   }
 
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('FRONTEND_URL is required to generate Agent install and upgrade URLs')
+  }
+
   const refererBaseUrl = normalizeBaseUrl(firstHeaderValue(request.headers.origin) ?? firstHeaderValue(request.headers.referer))
   if (refererBaseUrl) {
     return refererBaseUrl
@@ -477,7 +482,7 @@ function derivePanelUrl(request: FastifyRequest, explicitBaseUrl?: string): stri
     return `${protocol}://${host}`
   }
 
-  return 'https://incudal.com'
+  throw new Error('Unable to determine the panel URL')
 }
 
 function shellEscape(value: string): string {
@@ -856,6 +861,10 @@ function isSha256(value: string | undefined): value is string {
 }
 
 async function buildAgentUpgradeInstruction(request: FastifyRequest, body: AgentHeartbeatBody, agent: HostAgentRecord): Promise<AgentUpgradeInstruction> {
+  const autoUpdateEnabled = process.env.INCUDAL_AGENT_AUTO_UPDATE === 'true'
+  if (!agent.upgradeRequestedAt && !autoUpdateEnabled) {
+    return { available: false }
+  }
   const manifest = await readAgentUpgradeManifest()
   const manifestVersion = sanitizeShortString(manifest?.version, 128)
   if (!manifest || !manifestVersion) {
@@ -875,7 +884,10 @@ async function buildAgentUpgradeInstruction(request: FastifyRequest, body: Agent
     })
     return { available: false, version: manifestVersion }
   }
-  if (currentVersion === manifestVersion && !(hasPendingRequest && agent.upgradeForce)) {
+  if (!shouldOfferAgentUpgrade({
+    currentVersion, targetVersion: manifestVersion, hasPendingRequest,
+    force: Boolean(agent.upgradeForce), autoUpdateEnabled
+  })) {
     return { available: false, version: manifestVersion }
   }
 

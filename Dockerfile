@@ -2,6 +2,13 @@
 # Incudal 多阶段构建 Dockerfile
 # =====================================================
 
+# Build both Agent architectures from the same checkout as the panel.
+FROM golang:1.27.1-alpine3.24 AS builder-agent
+RUN apk add --no-cache bash
+WORKDIR /app/agent
+COPY agent ./
+RUN go test ./... && bash scripts/build-release.sh
+
 # Stage 1: 依赖安装
 FROM node:22-alpine AS deps
 RUN corepack enable && corepack prepare pnpm@9 --activate
@@ -63,6 +70,7 @@ COPY --from=builder-server /app/server/node_modules ./server/node_modules
 # 复制构建产物
 COPY --from=builder-server /app/server/dist ./server/dist
 COPY --from=builder-client /app/client/dist ./client/dist
+COPY --from=builder-agent /app/agent/dist ./agent/dist
 
 # 复制必要配置文件
 COPY server/package.json ./server/

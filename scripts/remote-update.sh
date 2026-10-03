@@ -2,20 +2,16 @@
 # ============================================================================
 # Incudal 远程更新入口
 #
-# 用法：
-#   curl -fsSL https://raw.githubusercontent.com/1743986520/incudal/deeb7d65b1d2a1df461373d48090d77b2b2e4741/scripts/remote-update.sh \
-#     | sudo bash
-#   curl -fsSL https://raw.githubusercontent.com/1743986520/incudal/deeb7d65b1d2a1df461373d48090d77b2b2e4741/scripts/remote-update.sh \
-#     | sudo bash -s -- --source https://github.com/owner/repo
+# 用法：sudo bash scripts/remote-update.sh --ref <已审查的完整 commit SHA>
 #
 # --source 接受 GitHub 仓库地址或 owner/repo。未指定时使用默认仓库。
 # 脚本会自动识别 Docker Compose 或 systemd 产物包部署。
 # ============================================================================
 set -euo pipefail
 
-readonly DEFAULT_GITHUB_REPO="1743986520/incudal"
+readonly DEFAULT_GITHUB_REPO="shane654/incudal"
 readonly DEFAULT_SOURCE_URL="https://github.com/${DEFAULT_GITHUB_REPO}"
-readonly DEFAULT_UPDATE_REF="deeb7d65b1d2a1df461373d48090d77b2b2e4741"
+
 INSTALL_DIR="${INCUDAL_INSTALL_DIR:-/opt/incudal}"
 
 RED='\033[1;31m'
@@ -56,21 +52,21 @@ Incudal 远程更新工具
   remote-update.sh [选项]
 
 选项:
-  --source <地址>    GitHub 仓库地址或 owner/repo，默认使用 1743986520/incudal
-  --ref <commit>     使用 40 位 immutable Git commit；默认使用内置 commit
+  --source <地址>    GitHub 仓库地址或 owner/repo，默认使用 shane654/incudal
+  --ref <commit>     必填，使用已审查的 40 位 Git commit SHA
   --mode <模式>      auto、docker 或 release，默认 auto
   --install-dir <目录>  安装目录，默认 /opt/incudal
   --help             显示帮助
 
 示例:
-  sudo bash remote-update.sh
-  sudo bash remote-update.sh --source https://github.com/owner/repo
+  sudo bash remote-update.sh --ref <完整 commit SHA>
+  sudo bash remote-update.sh --source https://github.com/owner/repo --ref <完整 commit SHA>
 EOF
 }
 
 SOURCE_INPUT="${INCUDAL_UPDATE_SOURCE:-${INCUDAL_GITHUB_REPO:-$DEFAULT_SOURCE_URL}}"
 MODE="${INCUDAL_UPDATE_MODE:-auto}"
-UPDATE_REF="${INCUDAL_UPDATE_REF:-$DEFAULT_UPDATE_REF}"
+UPDATE_REF="${INCUDAL_UPDATE_REF:-}"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in

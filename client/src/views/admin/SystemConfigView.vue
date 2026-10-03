@@ -102,7 +102,7 @@ const form = ref({
   brand_name: 'Incudal',
   brand_subtitle: '基于 Incus 的低价 NAT VPS',
   brand_logo_url: '/incudal_logo.webp',
-  seo_site_url: 'https://incudal.di0.uk',
+  seo_site_url: '',
   seo_sitemap_path: '/sitemap.xml',
   seo_verification_path: '',
   seo_verification_content: '',
@@ -110,7 +110,7 @@ const form = ref({
   seo_indexnow_key: '',
   seo_tracking_enabled: false,
   seo_tracking_script_url: 'https://www.googletagmanager.com/gtag/js',
-  seo_tracking_id: 'G-1HXQL8QTW2',
+  seo_tracking_id: '',
   // 邮箱域名白名单配置
   email_domain_whitelist_enabled: false,
   email_allowed_domains: '',
@@ -119,7 +119,7 @@ const form = ref({
   balance_transfer_enabled: false,
   balance_transfer_fee: 0,
   // 侧边栏底部联系方式
-  footer_contact_email: 'incudal@sent.com',
+  footer_contact_email: '',
   // 工单图片 Lsky 配置
   ticket_image_lsky_base_url: '',
   ticket_image_lsky_token: '',
@@ -1515,7 +1515,7 @@ async function sendTestEmail() {
                   type="text"
                   maxlength="128"
                   class="input font-mono"
-                  placeholder="G-1HXQL8QTW2"
+                  placeholder="G-XXXXXXXXXX"
                 />
                 <p class="text-xs text-themed-muted">{{ t('admin.system.seo.trackingIdHint') }}</p>
               </div>

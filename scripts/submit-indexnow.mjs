@@ -1,7 +1,11 @@
-const DEFAULT_SITE_URL = 'https://incudal.di0.uk'
 const DEFAULT_SITEMAP_PATH = '/sitemap.xml'
 
-const configuredSiteUrl = (process.env.SITE_URL || DEFAULT_SITE_URL).replace(/\/+$/, '')
+const configuredSiteUrl = (process.env.SITE_URL || '').replace(/\/+$/, '')
+
+if (!configuredSiteUrl) {
+  process.stdout.write('IndexNow skipped: configure SITE_URL first\n')
+  process.exit(0)
+}
 
 async function loadPublicSeoConfig() {
   try {

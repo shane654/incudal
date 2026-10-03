@@ -76,15 +76,15 @@ export async function initSystemConfig(): Promise<void> {
         { key: 'brand_subtitle', value: '基于 Incus 的低价 NAT VPS', type: 'string', label: '网站副标题', description: '站点顶部、公共页、SEO 默认描述等位置展示的品牌副标题，留空则使用默认值' },
         { key: 'brand_logo_url', value: '/incudal_logo.webp', type: 'string', label: '系统 Logo 地址', description: '站点顶部、登录页、SEO 等位置展示的 Logo 图片地址，留空则使用默认值' },
         // 网站 SEO 与追踪配置
-        { key: 'seo_site_url', value: 'https://incudal.di0.uk', type: 'string', label: 'SEO 站点地址', description: '用于 canonical、Sitemap 和搜索引擎提交的站点根地址' },
+        { key: 'seo_site_url', value: '', type: 'string', label: 'SEO 站点地址', description: '用于 canonical、Sitemap 和搜索引擎提交的站点根地址' },
         { key: 'seo_sitemap_path', value: '/sitemap.xml', type: 'string', label: 'Sitemap 路径', description: '公开 Sitemap 的访问路径，必须是站内绝对路径' },
-        { key: 'seo_verification_path', value: '/google3dea696cbb38c37d.html', type: 'string', label: '搜索引擎验证路径', description: '搜索引擎验证文件的站内路径，留空则关闭动态验证文件' },
-        { key: 'seo_verification_content', value: 'google-site-verification: google3dea696cbb38c37d.html', type: 'string', label: '搜索引擎验证内容', description: '访问验证路径时返回的纯文本或 HTML 文件内容' },
+        { key: 'seo_verification_path', value: '', type: 'string', label: '搜索引擎验证路径', description: '搜索引擎验证文件的站内路径，留空则关闭动态验证文件' },
+        { key: 'seo_verification_content', value: '', type: 'string', label: '搜索引擎验证内容', description: '访问验证路径时返回的纯文本或 HTML 文件内容' },
         { key: 'seo_indexnow_endpoint', value: 'https://api.indexnow.org/IndexNow', type: 'string', label: 'IndexNow 提交地址', description: 'IndexNow API 接收地址，用于通知支持的搜索引擎抓取公开 URL' },
-        { key: 'seo_indexnow_key', value: '6d5f0c0e9be241a5b35e5d2c6f6a49d1', type: 'string', label: 'IndexNow Key', description: 'IndexNow 验证 Key；对应的公开 Key 文件会由站点提供' },
+        { key: 'seo_indexnow_key', value: '', type: 'string', label: 'IndexNow Key', description: 'IndexNow 验证 Key；对应的公开 Key 文件会由站点提供' },
         { key: 'seo_tracking_enabled', value: 'false', type: 'boolean', label: '网站追踪开关', description: '开启后，前台按追踪地址和 ID 加载通用 gtag 追踪脚本' },
         { key: 'seo_tracking_script_url', value: 'https://www.googletagmanager.com/gtag/js', type: 'string', label: '追踪脚本地址', description: '通用追踪脚本地址，系统会自动附加 ?id=追踪 ID' },
-        { key: 'seo_tracking_id', value: 'G-1HXQL8QTW2', type: 'string', label: '追踪 ID', description: '例如 Google Analytics 4 的 G-XXXXXXXXXX；留空时不会加载追踪脚本' },
+        { key: 'seo_tracking_id', value: '', type: 'string', label: '追踪 ID', description: '例如 Google Analytics 4 的 G-XXXXXXXXXX；留空时不会加载追踪脚本' },
         { key: 'popup_announcement', value: '', type: 'string', label: '弹窗公告', description: '用户访问网站时弹出的公告内容，留空则不广播' },
         { key: 'popup_promo_image_url', value: '', type: 'string', label: '图片推广弹窗图片', description: '用户访问网站时弹出的套餐推广图片 URL，留空则不显示图片推广弹窗' },
         { key: 'popup_promo_package_id', value: '', type: 'string', label: '图片推广弹窗套餐', description: '图片推广弹窗的目标套餐 ID，需配合图片 URL 使用' },
@@ -95,8 +95,8 @@ export async function initSystemConfig(): Promise<void> {
         // 头像 API 配置
         { key: 'avatar_api_base', value: 'https://api.dicebear.com/9.x', type: 'string', label: '头像 API 地址', description: 'DiceBear 头像 API 基础地址，可自建服务' },
         // 侧边栏底部联系方式
-        { key: 'footer_contact_email', value: 'incudal@sent.com', type: 'string', label: '底部联系邮箱', description: '侧边栏底部邮箱按钮显示的邮箱地址或 mailto 链接' },
-        { key: 'footer_telegram_link', value: 'https://t.me/incudal_com', type: 'string', label: '底部 Telegram 群链接', description: '侧边栏底部 Telegram 按钮跳转地址' },
+        { key: 'footer_contact_email', value: '', type: 'string', label: '底部联系邮箱', description: '侧边栏底部邮箱按钮显示的邮箱地址或 mailto 链接' },
+        { key: 'footer_telegram_link', value: '', type: 'string', label: '底部 Telegram 群链接', description: '侧边栏底部 Telegram 按钮跳转地址' },
         // Telegram 专用机器人配置
         { key: 'telegram_bot_enabled', value: 'false', type: 'boolean', label: 'Telegram 专用机器人', description: '是否启用 Telegram 账号绑定机器人' },
         { key: 'telegram_bot_username', value: '', type: 'string', label: 'Telegram Bot 用户名', description: '机器人用户名，不含 @，用于生成绑定链接' },
@@ -174,6 +174,7 @@ export async function isRegistrationEnabled(): Promise<boolean> {
  * 后缀包含 @ 边界，例如 @example.com 不会匹配 user@notexample.com。
  */
 export async function isAdminRegistrationEmail(email: string): Promise<boolean> {
+    if (process.env.INCUDAL_ADMIN_REGISTRATION_ENABLED !== 'true') return false
     const configuredSuffixes = await getSystemConfig('admin_registration_emails')
     if (!configuredSuffixes) return false
 

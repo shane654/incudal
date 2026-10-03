@@ -3155,7 +3155,7 @@ export default {
             inviteOnly: '仅邀请',
             adminRegistrationEmails: '注册自动成为管理员的邮箱后缀',
             adminRegistrationEmailsPlaceholder: "例如：{'@'}abc.com\n{'@'}example.org",
-            adminRegistrationEmailsDesc: '填写邮箱后缀，多个后缀可用逗号、分号或换行分隔。使用匹配后缀且完成邮箱验证的用户注册后会自动成为管理员。',
+            adminRegistrationEmailsDesc: '默认关闭，需部署管理员在服务端显式开启后才生效。多个邮箱后缀可用逗号、分号或换行分隔；匹配后缀且完成邮箱验证的新用户才可自动成为管理员。',
             affRebate: {
                 title: 'AFF 返利',
                 description: '控制用户是否可以创建、使用 AFF 优惠码并获得返利收益。',
@@ -3222,7 +3222,7 @@ export default {
                 trackingEnabledHint: '开启后，所有前台页面会加载配置的追踪脚本。',
                 trackingScriptUrl: '追踪脚本地址',
                 trackingId: '追踪 ID',
-                trackingIdHint: '例如 Google Analytics 4 的 G-1HXQL8QTW2；留空时不会加载脚本。',
+                trackingIdHint: '例如 Google Analytics 4 的 G-XXXXXXXXXX；留空时不会加载脚本。',
             },
             ticket: {
                 title: '工单设置',

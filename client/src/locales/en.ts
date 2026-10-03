@@ -3158,7 +3158,7 @@ export default {
             inviteOnly: 'Invite Only',
             adminRegistrationEmails: 'Admin email suffixes',
             adminRegistrationEmailsPlaceholder: "For example: {'@'}abc.com\n{'@'}example.org",
-            adminRegistrationEmailsDesc: 'Enter email suffixes separated by commas, semicolons, or new lines. Users with a matching, verified email become administrators after registration.',
+            adminRegistrationEmailsDesc: 'Disabled by default; the deployment operator must explicitly enable this on the server. Separate email suffixes with commas, semicolons, or new lines. Only new users with a matching, verified email can become administrators.',
             affRebate: {
                 title: 'Referral Rebates',
                 description: 'Control whether users can create and use referral promo codes to earn rebates.',
@@ -3225,7 +3225,7 @@ export default {
                 trackingEnabledHint: 'When enabled, the configured tracking script loads on all frontend pages.',
                 trackingScriptUrl: 'Tracking script URL',
                 trackingId: 'Tracking ID',
-                trackingIdHint: 'For example, Google Analytics 4 ID G-1HXQL8QTW2. The script stays disabled when empty.',
+                trackingIdHint: 'For example, Google Analytics 4 ID G-XXXXXXXXXX. The script stays disabled when empty.',
             },
             ticket: {
                 title: 'Ticket Settings',

@@ -15,14 +15,13 @@
 #   升级：  sudo bash install-docker.sh --upgrade
 #   卸载：  sudo bash install-docker.sh --uninstall
 #
-# 项目地址: https://github.com/1743986520/incudal
+# 项目地址: https://github.com/shane654/incudal
 # ============================================================================
 set -euo pipefail
 
 # ========================== 全局常量 ==========================
 readonly SCRIPT_VERSION="1.0.0"
-readonly DEFAULT_GITHUB_REPO="1743986520/incudal"
-readonly DEFAULT_UPDATE_REF="deeb7d65b1d2a1df461373d48090d77b2b2e4741"
+readonly DEFAULT_GITHUB_REPO="shane654/incudal"
 readonly GITHUB_REPO="${INCUDAL_GITHUB_REPO:-${INCUDAL_UPDATE_SOURCE:-$DEFAULT_GITHUB_REPO}}"
 readonly DOCKER_IMAGE="ghcr.io/${GITHUB_REPO}"
 readonly INSTALL_DIR="${INCUDAL_INSTALL_DIR:-/opt/incudal}"
@@ -334,6 +333,8 @@ ADMIN_PASSWORD=${admin_password}
 INCUDAL_IMAGE=${DOCKER_IMAGE}:latest
 LOG_LEVEL=info
 DISABLE_REQUEST_LOG=true
+INCUDAL_ADMIN_REGISTRATION_ENABLED=false
+INCUDAL_AGENT_AUTO_UPDATE=false
 
 # ============ 面板访问地址 ============
 # 节点安装脚本、支付回调等功能依赖此地址
@@ -369,7 +370,7 @@ generate_compose() {
     cat > "$COMPOSE_FILE" << 'COMPOSEFILE'
 services:
   app:
-    image: ${INCUDAL_IMAGE:-ghcr.io/1743986520/incudal:latest}
+    image: ${INCUDAL_IMAGE:-ghcr.io/shane654/incudal:latest}
     ports:
       - "127.0.0.1:${APP_PORT:-3000}:3000"
     environment:
@@ -383,6 +384,11 @@ services:
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - FRONTEND_URL=${FRONTEND_URL:-}
       - SITE_URL=${SITE_URL:-}
+      - INCUDAL_ADMIN_REGISTRATION_ENABLED=${INCUDAL_ADMIN_REGISTRATION_ENABLED:-false}
+      - INCUDAL_AGENT_AUTO_UPDATE=${INCUDAL_AGENT_AUTO_UPDATE:-false}
+      - INCUDAL_UPDATE_ALLOWED_REPOSITORIES=${INCUDAL_UPDATE_ALLOWED_REPOSITORIES:-shane654/incudal}
+      - INCUDAL_UPDATE_REF=${INCUDAL_UPDATE_REF:-}
+      - INCUDAL_UPDATE_SCRIPT_SHA256=${INCUDAL_UPDATE_SCRIPT_SHA256:-}
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - DISABLE_REQUEST_LOG=${DISABLE_REQUEST_LOG:-true}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
@@ -604,7 +610,7 @@ show_result() {
     echo -e "  ${DIM}重启服务${NC}     docker compose -f ${COMPOSE_FILE} restart" >&2
     echo -e "  ${DIM}停止服务${NC}     docker compose -f ${COMPOSE_FILE} down" >&2
     echo -e "  ${DIM}更新镜像${NC}     sudo bash $0 --upgrade" >&2
-    echo -e "  ${DIM}远程更新${NC}     curl -fsSL https://raw.githubusercontent.com/${GITHUB_REPO}/${DEFAULT_UPDATE_REF}/scripts/remote-update.sh | sudo bash -s -- --ref ${DEFAULT_UPDATE_REF}" >&2
+    info "远程更新请在管理后台配置已审查的 commit SHA 和脚本 SHA256 后执行"
     divider
     echo "" >&2
 
