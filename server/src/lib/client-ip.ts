@@ -3,7 +3,7 @@ import proxyAddr from '@fastify/proxy-addr'
 import type { FastifyRequest } from 'fastify'
 
 // Published by Cloudflare: https://www.cloudflare.com/ips/
-export const trustedProxyRanges = [
+const defaultTrustedProxyRanges = [
   'loopback',
   '173.245.48.0/20',
   '103.21.244.0/22',
@@ -28,6 +28,25 @@ export const trustedProxyRanges = [
   '2a06:98c0::/29',
   '2c0f:f248::/32'
 ] as const
+
+export function resolveTrustedProxyRanges(additionalCidrs = ''): string[] {
+  const extraRanges = additionalCidrs.split(',').map(value => value.trim()).filter(Boolean)
+  for (const range of extraRanges) {
+    const [address, prefix, ...extraParts] = range.split('/')
+    const family = isIP(address)
+    const maxPrefix = family === 4 ? 32 : 128
+    if (!family || extraParts.length > 0 || (prefix !== undefined && (
+      !/^\d+$/.test(prefix) || Number(prefix) < 1 || Number(prefix) > maxPrefix
+    ))) {
+      throw new Error(`Invalid INCUDAL_TRUSTED_PROXY_CIDRS entry: ${range}`)
+    }
+  }
+  return [...new Set([...defaultTrustedProxyRanges, ...extraRanges])]
+}
+
+// Docker-published loopback ports reach the container through its bridge gateway.
+// Trust that specific proxy only when the operator explicitly configures it.
+export const trustedProxyRanges = resolveTrustedProxyRanges(process.env.INCUDAL_TRUSTED_PROXY_CIDRS)
 
 const isTrustedProxy = proxyAddr.compile([...trustedProxyRanges])
 

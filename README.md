@@ -93,6 +93,8 @@ docker compose up -d
 
 默认仅监听 `127.0.0.1:3000`，生产环境应通过受信任反向代理提供 HTTPS。启动前至少确认 `POSTGRES_PASSWORD`、`JWT_SECRET`、`ENCRYPTION_KEY`、`ADMIN_PASSWORD`、`FRONTEND_URL` 和 `SITE_URL` 已正确配置。不要提交生产环境 `.env`。
 
+Cloudflare Tunnel 可直接转发至宿主机的 `http://127.0.0.1:3000`，由 Cloudflare 提供公网 HTTPS。宿主机代理经过 Docker 端口映射后，应用通常看到的是网关 IP；确认 `docker network inspect incudal_default` 的实际网关后，在 `.env` 中设置 `INCUDAL_TRUSTED_PROXY_CIDRS=172.31.0.1/32`（默认网络示例），以正确识别访问者 IP。该配置只填写受你控制的代理 IP 或精确 CIDR，默认留空，不接受全网 `/0`。
+
 Docker 入口脚本会在启动应用前自动执行 Prisma migration。首次升级到 2026-09-16 版本时，IP 唯一索引迁移会检查历史数据；如果已有活动实例撞 IP，迁移会停止并要求人工核对，不会自动覆盖运行中实例的地址。
 
 ## 本地开发
