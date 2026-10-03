@@ -10,9 +10,9 @@ for executable in docker python3 flock systemctl systemd-analyze; do
   command -v "$executable" >/dev/null || { echo "Missing executable: $executable" >&2; exit 1; }
 done
 install -m 0755 "$script_dir/auto-update.sh" /usr/local/sbin/incudal-auto-update
-# systemd unit values support quoted paths with escaped backslashes and quotes.
-escaped_directory=${app_directory//\\/\\\\}
-escaped_directory=${escaped_directory//\"/\\\"}
+# WorkingDirectory is one absolute path, not an ExecStart argument list.
+# Quotes would become part of the path. Escape systemd's percent specifiers.
+escaped_directory=${app_directory//%/%%}
 escaped_directory=${escaped_directory//%/%%}
 cat > /etc/systemd/system/incudal-auto-update.service <<UNIT
 [Unit]
@@ -23,7 +23,7 @@ Requires=docker.service
 
 [Service]
 Type=oneshot
-WorkingDirectory="$escaped_directory"
+WorkingDirectory=$escaped_directory
 ExecStart=/usr/local/sbin/incudal-auto-update
 TimeoutStartSec=10min
 UMask=0077
