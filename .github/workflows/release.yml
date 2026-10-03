@@ -12,6 +12,11 @@ on:
         description: 'Release tag vMAJOR.MINOR.PATCH[-prerelease]; empty builds preview artifacts only'
         required: false
         default: ''
+      docker_only:
+        description: 'Rebuild only Docker images for an existing release tag'
+        type: boolean
+        required: false
+        default: false
 
 env:
   NODE_VERSION: '22'
@@ -33,6 +38,7 @@ jobs:
       image_major: ${{ steps.version.outputs.image_major }}
       is_stable: ${{ steps.version.outputs.is_stable }}
       is_prerelease: ${{ steps.version.outputs.is_prerelease }}
+      source_sha: ${{ steps.source.outputs.sha }}
     steps:
       - name: Validate and resolve version
         id: version
@@ -88,11 +94,23 @@ jobs:
             echo "image_major=$image_major"
             echo "is_stable=$is_stable"
             echo "is_prerelease=$is_prerelease"
+            if [[ "$publish" == true ]]; then
+              echo "source_ref=$version"
+            else
+              echo "source_ref=$GIT_SHA"
+            fi
           } >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.version.outputs.source_ref }}
+      - name: Pin release source commit
+        id: source
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
   build:
     name: Build (${{ matrix.arch }})
     needs: prepare
+    if: inputs.docker_only != true
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
@@ -105,6 +123,8 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.source_sha }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -203,6 +223,7 @@ jobs:
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ needs.prepare.outputs.version }}
           files: |
             incudal-*.tar.gz
             incudal-*.tar.gz.sha256
@@ -210,16 +231,84 @@ jobs:
           prerelease: ${{ needs.prepare.outputs.is_prerelease == 'true' }}
 
   docker:
-    name: Publish multi-arch Docker image
+    name: Build Docker (${{ matrix.arch }})
     needs: prepare
+    if: needs.prepare.outputs.publish == 'true'
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            platform: linux/amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.source_sha }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          labels: |
+            org.opencontainers.image.revision=${{ needs.prepare.outputs.source_sha }}
+          tags: |
+            type=raw,value=${{ needs.prepare.outputs.image_version }}
+            type=raw,value=${{ needs.prepare.outputs.image_minor }},enable=${{ needs.prepare.outputs.is_stable == 'true' }}
+            type=raw,value=${{ needs.prepare.outputs.image_major }},enable=${{ needs.prepare.outputs.is_stable == 'true' }}
+            type=raw,value=latest,enable=${{ needs.prepare.outputs.is_stable == 'true' }}
+      - uses: docker/build-push-action@v6
+        id: build
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          outputs: type=image,name=ghcr.io/${{ github.repository }},push-by-digest=true,name-canonical=true,push=true
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=incudal-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=incudal-${{ matrix.arch }}
+      - name: Export image digest
+        env:
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          digest="${IMAGE_DIGEST#sha256:}"
+          [[ "$digest" =~ ^[0-9a-f]{64}$ ]] || { echo 'invalid image digest' >&2; exit 1; }
+          mkdir -p /tmp/digests
+          touch "/tmp/digests/$digest"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: image-digest-${{ matrix.arch }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  docker-merge:
+    name: Publish multi-arch Docker image
+    needs: [prepare, docker]
     if: needs.prepare.outputs.publish == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v3
+      - uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: image-digest-*
+          merge-multiple: true
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -236,12 +325,27 @@ jobs:
             type=raw,value=${{ needs.prepare.outputs.image_minor }},enable=${{ needs.prepare.outputs.is_stable == 'true' }}
             type=raw,value=${{ needs.prepare.outputs.image_major }},enable=${{ needs.prepare.outputs.is_stable == 'true' }}
             type=raw,value=latest,enable=${{ needs.prepare.outputs.is_stable == 'true' }}
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Verify platforms and publish tags
+        working-directory: /tmp/digests
+        env:
+          IMAGE_NAME: ghcr.io/${{ github.repository }}
+          IMAGE_VERSION: ${{ needs.prepare.outputs.image_version }}
+          METADATA_JSON: ${{ steps.meta.outputs.json }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          digests=(*)
+          [[ ${#digests[@]} -eq 2 ]] || { echo 'expected two platform digests' >&2; exit 1; }
+          image_refs=()
+          for digest in "${digests[@]}"; do
+            [[ "$digest" =~ ^[0-9a-f]{64}$ ]] || { echo 'invalid platform digest' >&2; exit 1; }
+            image_refs+=("$IMAGE_NAME@sha256:$digest")
+          done
+          docker buildx imagetools create --tag "$IMAGE_NAME:$IMAGE_VERSION" "${image_refs[@]}"
+          docker buildx imagetools inspect "$IMAGE_NAME:$IMAGE_VERSION" --raw | jq -e \
+            '[.manifests[] | select(.platform.os == "linux") | .platform.architecture] | sort | unique == ["amd64", "arm64"]'
+          mapfile -t tags < <(jq -r '.tags[]' <<< "$METADATA_JSON")
+          [[ ${#tags[@]} -gt 0 ]] || { echo 'missing image tags' >&2; exit 1; }
+          tag_args=()
+          for tag in "${tags[@]}"; do tag_args+=(--tag "$tag"); done
+          docker buildx imagetools create "${tag_args[@]}" "$IMAGE_NAME:$IMAGE_VERSION"
